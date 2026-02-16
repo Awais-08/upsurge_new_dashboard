@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
-
+// ..
 export default function Topbar({ onMenuClick }) {
   const location = useLocation();
 
