@@ -36,24 +36,29 @@ const AddAgent = ({ onClose }) => {
 
     setLoading(true);
 
-    let imageUrl = preview; // default if URL pasted
+  let imageUrl = null;
 
-    // Upload image to Supabase Storage if a file is selected
+
     if (imageFile) {
-      const fileName = `${Date.now()}_${imageFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("agent-photos")
-        .upload(fileName, imageFile);
+  const fileName = `agents/${Date.now()}_${imageFile.name}`;
 
-      if (uploadError) {
-        toast.error("Image upload failed: " + uploadError.message);
-        setLoading(false);
-        return;
-      }
+  const { error: uploadError } = await supabase.storage
+    .from("agent-photos")
+    .upload(fileName, imageFile);
 
-      const { publicURL } = supabase.storage.from("agent-photos").getPublicUrl(fileName);
-      imageUrl = publicURL;
-    }
+  if (uploadError) {
+    toast.error("Image upload failed: " + uploadError.message);
+    setLoading(false);
+    return;
+  }
+
+  const { data } = supabase.storage
+    .from("agent-photos")
+    .getPublicUrl(fileName);
+
+  imageUrl = data.publicUrl;
+}
+
 
     // Insert into Supabase table
     const { error } = await supabase.from("agents").insert([
@@ -118,7 +123,7 @@ const AddAgent = ({ onClose }) => {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <img src="/avatar.svg" className="w-14 h-7"/>
+                  <img src="/avatar.svg" className="w-14 h-7" />
                 )}
               </div>
 
@@ -132,7 +137,7 @@ const AddAgent = ({ onClose }) => {
             </div>
             <p className="mt-2 text-sm text-[#6B7280]">Agent Photo</p>
           </div>
- <div>
+          <div>
             <label className="text-sm font-medium text-[#374151]">
               Photo URL
             </label>
@@ -183,8 +188,8 @@ const AddAgent = ({ onClose }) => {
               onChange={(e) => setRole(e.target.value)}
               className="rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
             >
-              <option>Real Estate Agent</option>
-              <option>Broker</option>
+              <option>REALTOR®</option>
+              <option>Broker-in-Charge</option>
               <option>Manager</option>
             </select>
             <input

@@ -27,7 +27,7 @@ const [totalMessages, setTotalMessages] = useState(0);
 
 
       const { count: messageCount } = await supabase
-        .from("messages")
+        .from("contacts")
         .select("*", { count: "exact", head: true });
 
       setTotalProperties(propertyCount || 0);

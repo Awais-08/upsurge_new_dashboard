@@ -3,45 +3,12 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../config/supabaseClient";
-// const initialProperties = [
-//     {
-//         id: 1,
-//         title: "Modern Waterfront Villa",
-//         type: "House",
-//         location: "Miami, FL",
-//         price: "$2,500,000",
-//         status: "Active",
-//         statusStyle: "bg-green-100 text-green-700",
-//         date: "15/10/2023",
-//         image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=100",
-//     },
-//     {
-//         id: 2,
-//         title: "Downtown Luxury Penthouse",
-//         type: "Apartment",
-//         location: "New York, NY",
-//         price: "$1,200,000",
-//         status: "Active",
-//         statusStyle: "bg-green-100 text-green-700",
-//         date: "18/10/2023",
-//         image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=100",
-//     },
-//     {
-//         id: 3,
-//         title: "Cozy Mountain Cabin",
-//         type: "House",
-//         location: "Aspen, CO",
-//         price: "$450,000",
-//         status: "Sold",
-//         statusStyle: "bg-gray-100 text-gray-600",
-//         date: "05/09/2023",
-//         image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=100",
-//     },
-// ];
+
 export default function Properties() {
     const [properties, setProperties] = useState([]);
     const [search, setSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [loading, setLoading] = useState(true); // ✅ loading state
     const rowsPerPage = 5;
 
     const navigate = useNavigate();
@@ -49,6 +16,7 @@ export default function Properties() {
     // Fetch properties from Supabase
     useEffect(() => {
         const fetchProperties = async () => {
+            setLoading(true); // show spinner
             const { data, error } = await supabase
                 .from("properties")
                 .select("*")
@@ -59,6 +27,7 @@ export default function Properties() {
             } else {
                 setProperties(data);
             }
+            setLoading(false); // hide spinner
         };
 
         fetchProperties();
@@ -132,7 +101,13 @@ export default function Properties() {
                         </thead>
 
                         <tbody className="divide-y divide-gray-200">
-                            {paginatedProperties.length > 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={6} className="py-6 text-center">
+                                        <div className="w-10 h-10 mx-auto border border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                                    </td>
+                                </tr>
+                            ) : paginatedProperties.length > 0 ? (
                                 paginatedProperties.map((item) => (
                                     <tr key={item.id} className="hover:bg-gray-50 transition">
                                         <td className="px-6 py-4">
@@ -149,19 +124,22 @@ export default function Properties() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">{item.city}</td>
-                                        <td className="px-6 py-4 font-medium">{item.price}</td>
+                                        <td className="px-6 py-4 font-medium">${item.price}</td>
                                         <td className="px-6 py-4">
                                             <span
-                                                className={`px-3 py-1 text-xs rounded-full font-medium ${item.status === "Active"
+                                                className={`px-3 py-1 text-xs rounded-full font-medium ${
+                                                    item.status === "Active"
                                                         ? "bg-green-100 text-green-700"
                                                         : "bg-gray-100 text-gray-600"
-                                                    }`}
+                                                }`}
                                             >
                                                 {item.status}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">
-                                            {item.created_at ? new Date(item.created_at).toISOString().slice(0, 10) : "-"}
+                                            {item.created_at
+                                                ? new Date(item.created_at).toISOString().slice(0, 10)
+                                                : "-"}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="inline-flex gap-3 text-gray-400">
@@ -187,7 +165,6 @@ export default function Properties() {
                                 </tr>
                             )}
                         </tbody>
-
                     </table>
                 </div>
 

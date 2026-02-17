@@ -9,7 +9,7 @@ export default function AgentCard({ agent }) {
 
             <div className="relative">
                 <img
-                    src={agent.image || "/agent1.png"}
+                    src={agent.photo_url}
                     alt={agent.name}
                     className="w-full h-56 object-cover"
                 />

@@ -8,6 +8,7 @@ export default function Blogs() {
   const [blogs, setBlogs] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true); // ✅ Loading state
   const navigate = useNavigate();
 
   const ITEMS_PER_PAGE = 5;
@@ -15,16 +16,18 @@ export default function Blogs() {
   // Fetch blogs from Supabase
   useEffect(() => {
     const fetchBlogs = async () => {
+      setLoading(true); // start loading
       const { data, error } = await supabase
         .from("blogs")
         .select("*")
-        .order("id", { ascending: false }); // newest first
+        .order("id", { ascending: false });
 
       if (error) {
         console.error("Error fetching blogs:", error.message);
       } else {
         setBlogs(data);
       }
+      setLoading(false); // stop loading
     };
 
     fetchBlogs();
@@ -32,7 +35,9 @@ export default function Blogs() {
 
   // Filtered and paginated blogs
   const filteredBlogs = blogs.filter((item) =>
-    `${item.title} ${item.author || ""}`.toLowerCase().includes(search.toLowerCase())
+    `${item.title} ${item.author || ""}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredBlogs.length / ITEMS_PER_PAGE) || 1;
@@ -92,7 +97,14 @@ export default function Blogs() {
             </thead>
 
             <tbody>
-              {paginatedBlogs.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-10 text-center">
+                    {/* Spinner */}
+                    <div className="w-10 h-10 mx-auto border border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                  </td>
+                </tr>
+              ) : paginatedBlogs.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
                     No blogs found.
@@ -104,13 +116,11 @@ export default function Blogs() {
                     {/* Post */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                       
-                          <img
-                            src={item.cover_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=300"}
-                            alt={item.title}
-                            className="w-12 h-12 rounded-lg object-cover"
-                          />
-                     
+                        <img
+                          src={item.cover_image || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=300"}
+                          alt={item.title}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
                         <div>
                           <p className="font-semibold text-gray-900">{item.title}</p>
                           <p className="text-xs text-gray-500">{item.author || "By Admin"}</p>

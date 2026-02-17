@@ -64,7 +64,7 @@ export default function EditProperty() {
         city: location,
         price,
         status,
-        image: imageUrl,
+        images:[ imageUrl],
       })
       .eq("id", property.id); // match property by id
 

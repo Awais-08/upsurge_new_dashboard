@@ -3,6 +3,9 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useRef, useState } from "react";
 import { supabase } from "../config/supabaseClient";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function CreateBlogPost() {
   const navigate = useNavigate();
@@ -11,7 +14,32 @@ export default function CreateBlogPost() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userName, setUserName] = useState("");
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      if (!user) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("name")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setUserName(data.name || user.email);
+
+      } else {
+        setUserName(user.email);
+      }
+    };
+
+    fetchUser();
+  }, []);
+  console.log("Current user:", userName);
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -27,54 +55,55 @@ export default function CreateBlogPost() {
     fileInputRef.current.value = "";
   };
 
-  const handlePublish = async () => {
-    if (!title || !content) {
-      alert("Title and content are required!");
+ const handlePublish = async () => {
+  if (!title || !content) {
+    toast.error("Title and content are required!");
+    return;
+  }
+
+  setLoading(true);
+
+  let imageUrl = null;
+
+  // Upload image if selected
+  if (image?.file) {
+    const fileName = `${Date.now()}-${image.file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from("blog-images")
+      .upload(fileName, image.file);
+
+    if (uploadError) {
+      toast.error("Image upload failed: " + uploadError.message);
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
+    const { data } = supabase.storage
+      .from("blog-images")
+      .getPublicUrl(fileName);
 
-    let imageUrl = null;
+    imageUrl = data.publicUrl;
+  }
 
-    // Upload image if selected
-    if (image?.file) {
-      const fileName = `${Date.now()}-${image.file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("blog-images")
-        .upload(fileName, image.file);
+  // Insert blog post into Supabase
+  const { error } = await supabase.from("blogs").insert([
+    {
+      title,
+      content,
+      cover_image: imageUrl,
+      author: userName,
+    },
+  ]);
 
-      if (uploadError) {
-        alert("Image upload failed: " + uploadError.message);
-        setLoading(false);
-        return;
-      }
+  setLoading(false);
 
-      const { data } = supabase.storage
-        .from("blog-images")
-        .getPublicUrl(fileName);
-
-      imageUrl = data.publicUrl;
-    }
-
-    // Insert blog post into Supabase
-    const { error } = await supabase.from("blogs").insert([
-      {
-        title,
-        content,
-        cover_image: imageUrl,
-      },
-    ]);
-
-    setLoading(false);
-
-    if (error) {
-      alert("Error creating blog post: " + error.message);
-    } else {
-      alert("Blog post created successfully!");
-      navigate("/blogs");
-    }
-  };
+  if (error) {
+    toast.error("Error creating blog post: " + error.message);
+  } else {
+    toast.success("Blog post created successfully!");
+    navigate("/blogs");
+  }
+};
 
   return (
     <DashboardLayout>

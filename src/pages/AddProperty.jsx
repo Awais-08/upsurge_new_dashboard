@@ -3,6 +3,8 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "../config/supabaseClient";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function AddProperty() {
     const navigate = useNavigate();
@@ -35,7 +37,7 @@ export default function AddProperty() {
         if (!file) return;
 
         if (images.length >= 4) {
-            alert("Maximum 4 images allowed");
+            toast.error("Maximum 4 images allowed");
             return;
         }
 
@@ -43,18 +45,16 @@ export default function AddProperty() {
 
         const fileName = `${Date.now()}-${file.name}`;
 
-        // Upload file
         const { data: uploadData, error: uploadError } = await supabase.storage
             .from("property-images")
             .upload(fileName, file, { cacheControl: "3600", upsert: false });
 
         if (uploadError) {
-            alert(uploadError.message);
+            toast.error(uploadError.message);
             setUploading(false);
             return;
         }
 
-        // Get public URL
         const { data: publicData } = supabase.storage
             .from("property-images")
             .getPublicUrl(fileName);
@@ -63,28 +63,30 @@ export default function AddProperty() {
         setUploading(false);
     };
 
-
-
-    // Save Property
     const handleSubmit = async () => {
         setLoading(true);
+
+        const cleanPrice = Number(formData.price.replace(/,/g, ""));
 
         const { error } = await supabase.from("properties").insert([
             {
                 ...formData,
+                price: cleanPrice,
                 images,
             },
         ]);
 
         if (error) {
-            alert(error.message);
+            toast.error(error.message);
             setLoading(false);
             return;
         }
 
-        alert("Property Added Successfully ✅");
+        toast.success("Property Added Successfully");
         navigate("/properties");
     };
+
+
     return (
         <DashboardLayout>  <div className="p-6 max-w-4xl mx-auto">
 

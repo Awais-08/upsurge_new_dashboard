@@ -124,18 +124,20 @@ export default function Agents() {
           </button>
         </div>
 
-        {/* Cards */}
-        {loading ? (
-          <p className="text-center text-gray-500 mt-10">Loading agents...</p>
-        ) : agents.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10">No agents found.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {currentAgents.map((agent) => (
-              <AgentCard key={agent.id} agent={agent} />
-            ))}
-          </div>
-        )}
+       {loading ? (
+  <div className="flex justify-center items-center mt-10">
+    <div className="w-12 h-12 border border-[#5856D6] border-t-transparent rounded-full animate-spin"></div>
+  </div>
+) : agents.length === 0 ? (
+  <p className="text-center text-gray-500 mt-10">No agents found.</p>
+) : (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {currentAgents.map((agent) => (
+      <AgentCard key={agent.id} agent={agent} />
+    ))}
+  </div>
+)}
+
 
         {/* Pagination */}
         {totalPages > 1 && (
